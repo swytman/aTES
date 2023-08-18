@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+#gem list
+bundle exec karafka server
