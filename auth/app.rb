@@ -12,17 +12,26 @@ class App < Roda
     r.on 'api' do
       # GET /api/users
       r.get 'users' do
-        ApiUsersHandler.new.call
+        result = ApiUsersHandler.new.call
+        response.status = result.code
+
+        result.body
       end
 
       # POST /api/register
       r.post 'register' do
-        ApiRegisterHandler.new(JSON.parse(r.body.read)).call
+        result = ApiRegisterHandler.new(JSON.parse(r.body.read)).call
+        response.status = result.code
+
+        result.body
       end
 
       # POST /api/login
       r.post 'login' do
-        ApiLoginHandler.new(JSON.parse(r.body.read)).call
+        result = ApiLoginHandler.new(JSON.parse(r.body.read)).call
+        response.status = result.code
+
+        result.body
       end
     end
   end

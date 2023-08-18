@@ -1,5 +1,7 @@
 require 'digest'
 require 'securerandom'
+require_relative 'handler_response'
+require 'schema_registry'
 
 class ApiRegisterHandler
   include Producer
@@ -10,21 +12,30 @@ class ApiRegisterHandler
   end
 
   def call
-    return 'User exists!' if user_exists?
+    return user_exists_error if user_exists?
 
     create_db_user
     produce_user_created_event
 
-    user_data
+    HandlerResponse.new(201, user_data)
   end
 
   private
 
+  def user_exists_error
+    HandlerResponse.new(400, message: 'User exists')
+  end
+
   def produce_user_created_event
     event = {
       event_name: 'UserCreated',
-      data: user_data.slice(:user, :uuid, :role)
+      data: user_data.slice(:username, :uuid, :role)
     }
+
+    pp user_data.slice(:username, :uuid, :role)
+
+    result = SchemaRegistry.validate_event(event, 'ates.user_created', version: 1)
+    raise 'SchemaValidationFailed' if result.failure?
 
     producer.produce_sync(payload: event.to_json, topic: 'users-stream')
   end
@@ -34,7 +45,7 @@ class ApiRegisterHandler
   end
 
   def user_exists?
-    users.where(user: body['user']).count.positive?
+    users.where(username: body['username']).count.positive?
   end
 
   def create_db_user
@@ -47,7 +58,7 @@ class ApiRegisterHandler
 
   def user_data
     @user_data ||= {
-      user: body['user'],
+      username: body['username'],
       password: hashed_password,
       uuid: generate_uuid,
       role: body['role'] || roles_list.sample

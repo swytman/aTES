@@ -13,50 +13,64 @@ class App < Roda
     r.on 'api' do
       # GET /api/users
       r.get 'users' do
-        ApiUsersHandler.new.call
+        result = ApiUsersHandler.new.call
+        response.status = result.code
+
+        result.body
       end
 
       r.get 'tasks' do
         user = Auth.new(r).call
         unless user
-          response.status = 403
+          response.status = 401
           return
         end
 
-        ApiTasksHandler.new(user).call
+        result = ApiTasksHandler.new(user).call
+        response.status = result.code
+
+        result.body
       end
 
       r.post 'tasks' do
         user = Auth.new(r).call
         unless user
-          response.status = 403
+          response.status = 401
           return
         end
 
         body = (JSON.parse(r.body.read))
 
-        ApiNewTaskHandler.new(user, body).call
+        result = ApiNewTaskHandler.new(user, body).call
+        response.status = result.code
+
+        result.body
       end
 
       r.on 'tasks' do
         r.post 'reassign' do
           user = Auth.new(r).call
           unless user
-            response.status = 403
+            response.status = 401
             return
           end
 
-          ApiReassignTaskHandler.new(user).call
+          result = ApiReassignTaskHandler.new(user).call
+          response.status = result.code
+
+          result.body
         end
 
         r.post Integer, 'resolve' do |task_id|
           user = Auth.new(r).call
           unless user
-            response.status = 403
+            response.status = 401
             return
           end
+          result = ApiResolveTaskHandler.new(user, task_id).call
+          response.status = result.code
 
-          ApiResolveTaskHandler.new(user, task_id).call
+          result.body
         end
       end
     end

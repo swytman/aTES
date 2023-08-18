@@ -1,5 +1,6 @@
 require 'digest'
 require 'jwt'
+require_relative 'handler_response'
 
 class ApiLoginHandler
   include Producer
@@ -10,15 +11,15 @@ class ApiLoginHandler
   end
 
   def call
-    return 'User not found!' unless user
+    return HandlerResponse.new(400, 'User not found!') unless user
 
-    token
+    HandlerResponse.new(200, token)
   end
 
   private
 
   def user
-    @user ||= users.where(user: body['user'], password: hashed_password).first
+    @user ||= users.where(username: body['user'], password: hashed_password).first
   end
 
   def db

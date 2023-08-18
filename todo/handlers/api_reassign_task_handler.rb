@@ -1,4 +1,5 @@
-class ApiReassignTaskHandler
+require_relative 'base_handler'
+class ApiReassignTaskHandler < BaseHandler
   include Producer
   attr_accessor :user
 
@@ -7,25 +8,36 @@ class ApiReassignTaskHandler
   end
 
   def call
-    return 'NoAccess' unless access?
+    return no_access_error unless access?
 
-    messages = []
-    tasks.each do |task|
-      new_uuid = staff_users.sample[:uuid]
-      db[:tasks].where(id: task[:id]).update(user_uuid: new_uuid)
+    reassign_tasks
 
-      messages << {
-        topic: 'tasks-stream',
-        payload: {
-          event_name: 'TaskReassigned',
-          data: task.merge!(user_uuid: new_uuid)
-        }.to_json
-      }
-    end
-    producer.produce_many_sync(messages)
+    success_response(result: true)
   end
 
   private
+
+  def reassign_tasks
+    messages = []
+    tasks.each do |task|
+      new_user_uuid = staff_users.sample[:uuid]
+      db[:tasks].where(id: task[:id]).update(user_uuid: new_user_uuid)
+
+      event = {
+        event_name: 'TaskReassigned',
+        data: {task_uuid: task[:uuid], assignee_uuid: new_user_uuid}
+      }
+      result = SchemaRegistry.validate_event(event, 'ates.task_reassigned', version: 1)
+      raise 'SchemaValidationFailed' if result.failure?
+
+      messages << {
+        topic: 'tasks-lifecycle',
+        payload: event.to_json
+      }
+    end
+
+    producer.produce_many_sync(messages)
+  end
 
   def policy
     @policy ||= Policies::TaskPolicy.new(user)

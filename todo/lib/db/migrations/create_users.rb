@@ -12,7 +12,9 @@ Db::Migration.new(File.basename(__FILE__)).call do
 
   connection.create_table? :tasks do
     primary_key :id
+    UUID :uuid
     UUID :user_uuid
+    String :title
     Text :description
     DateTime :created_at
     DateTime :closed_at

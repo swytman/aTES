@@ -1,4 +1,5 @@
-class ApiTasksHandler
+require_relative 'base_handler'
+class ApiTasksHandler < BaseHandler
   attr_accessor :user
 
   def initialize(user)
@@ -7,9 +8,9 @@ class ApiTasksHandler
 
   def call
     db = Db::Connection.new.connection
-    return 'NoAccess' unless access?
+    return no_access_error unless access?
 
-    policy.scoped(db[:tasks]).to_a
+    success_response(policy.scoped(db[:tasks]).to_a)
   end
 
   private

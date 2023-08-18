@@ -5,7 +5,7 @@ Db::Migration.new(File.basename(__FILE__)).call do
   connection.create_table? :users do
     primary_key :id
     UUID :uuid
-    String :user
+    String :username
     String :password
     String :role
   end

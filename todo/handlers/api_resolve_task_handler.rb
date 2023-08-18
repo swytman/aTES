@@ -1,4 +1,5 @@
-class ApiResolveTaskHandler
+require_relative 'base_handler'
+class ApiResolveTaskHandler < BaseHandler
   include Producer
   attr_accessor :user, :task_id
 
@@ -8,31 +9,39 @@ class ApiResolveTaskHandler
   end
 
   def call
-    return 'NoTaskFound' unless task
-    return 'TaskAlreadyResolved' if task[:status] == 'closed'
-    return 'NoAccess' unless access?
+    return no_task_found_error unless task
+    return task_already_resolved_error if task[:status] == 'closed'
+    return no_access_error unless access?
 
-    resolve_task
+    success_response(resolve_task)
   end
 
   private
 
-  def resolve_task
-    resolved = {closed_at: Time.now, status: 'closed'}
-    db[:tasks].where(id: task_id).update(resolved)
-    updated_task = task.merge(resolved)
-    produce_task_resolved_event(updated_task)
-
-    updated_task
+  def no_task_found_error
+    HandlerResponse.new(404, message: 'NoTaskFound')
   end
 
-  def produce_task_resolved_event(updated_task)
+  def task_already_resolved_error
+    HandlerResponse.new(400, message: 'TaskAlreadyResolved')
+  end
+
+  def resolve_task
+    db[:tasks].where(id: task_id).update(closed_at: Time.now, status: 'closed')
+    produce_task_resolved_event
+
+    {result: true}
+  end
+
+  def produce_task_resolved_event
     event = {
       event_name: 'TaskResolved',
-      data: updated_task
+      data: {task_uuid: task[:uuid], resolver_uuid: user[:uuid]}
     }
+    result = SchemaRegistry.validate_event(event, 'ates.task_resolved', version: 1)
+    raise 'SchemaValidationFailed' if result.failure?
 
-    producer.produce_sync(payload: event.to_json, topic: 'tasks-stream')
+    producer.produce_sync(payload: event.to_json, topic: 'tasks-lifecycle')
   end
 
   def db
