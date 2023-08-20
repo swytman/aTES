@@ -7,7 +7,7 @@ class App < Roda
   route do |r|
     # GET /
     r.root do
-      'Welcome to PopungInc AUTH service'
+      'Welcome to PopungInc ACCOUNTING service'
     end
 
     r.on 'api' do
