@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+gem 'roda', '~> 3.7'
+gem 'pg', '1.5.3'
+gem 'sequel', '5.71'
+gem 'rackup'
+gem "schema_registry", git: "https://github.com/swytman/popug_schema_registry.git", tag: 'v1.1'
+gem 'jwt'
+gem 'waterdrop'

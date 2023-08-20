@@ -1,12 +1,12 @@
 require_relative 'application_consumer'
 
-class UserConsumer < ApplicationConsumer
+class TaskConsumer < ApplicationConsumer
   def consume
     messages.each do |message|
       message = message.payload
       case message['event_name']
-      when'UserCreated'
-        users.insert(user_data(message))
+      when'TaskCreated'
+        tasks.insert(user_data(message))
       end
       puts message
     end
@@ -17,10 +17,10 @@ class UserConsumer < ApplicationConsumer
   private
 
   def user_data(message)
-    message['data'].slice('username', 'uuid', 'role')
+    message['data'].slice('uuid', 'title', 'assign_price', 'resolve_price')
   end
 
-  def users
-    db[:users]
+  def tasks
+    db[:tasks]
   end
 end

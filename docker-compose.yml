@@ -55,3 +55,27 @@ services:
     environment:
       - KAFKA_USER=${KAFKA_USER}
       - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+  accounting:
+    build: ./accounting
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./todo/logs:/logs
+    environment:
+      - TOKEN_KEY=${TOKEN_KEY}
+      - KAFKA_USER=${KAFKA_USER}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+      - INIT=${INIT}
+  accounting_karafka:
+    build: ./accounting/lib/karafka
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      - KAFKA_USER=${KAFKA_USER}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}

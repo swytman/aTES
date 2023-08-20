@@ -50,7 +50,7 @@ class ApiNewTaskHandler < BaseHandler
   end
 
   def assign_price
-    rand(10..20) * (-1)
+    rand(10..20)
   end
 
   def resolve_price
@@ -67,7 +67,6 @@ class ApiNewTaskHandler < BaseHandler
       data: task_data
     }
 
-    pp event
     result = SchemaRegistry.validate_event(event, 'ates.task_created', version: 1)
     raise 'SchemaValidationFailed' if result.failure?
 
