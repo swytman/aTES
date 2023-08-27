@@ -1,12 +1,12 @@
 require_relative 'application_consumer'
 
-class UserConsumer < ApplicationConsumer
+class AccountingCommandsConsumer < ApplicationConsumer
   def consume
     messages.each do |message|
       message = message.payload
       case message['event_name']
-      when'UserCreated'
-        users.insert(user_data(message))
+      when'DayFinished'
+        Handlers::DayFinishedHandler.new(day_finished_data(message)).call
       end
       puts message
     end
@@ -16,11 +16,7 @@ class UserConsumer < ApplicationConsumer
 
   private
 
-  def user_data(message)
-    message['data'].slice('username', 'uuid', 'role')
-  end
-
-  def users
-    db[:users]
+  def day_finished_data(message)
+    message['data'].slice('finished_at')
   end
 end

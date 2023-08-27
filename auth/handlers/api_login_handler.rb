@@ -19,7 +19,7 @@ class ApiLoginHandler
   private
 
   def user
-    @user ||= users.where(username: body['user'], password: hashed_password).first
+    @user ||= users.where(username: body['username'], password: hashed_password).first
   end
 
   def db
