@@ -79,3 +79,27 @@ services:
     environment:
       - KAFKA_USER=${KAFKA_USER}
       - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+  analytics:
+    build: ./analytics
+    env_file:
+      - .env
+    depends_on:
+      - db
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./todo/logs:/logs
+    environment:
+      - TOKEN_KEY=${TOKEN_KEY}
+      - KAFKA_USER=${KAFKA_USER}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}
+      - INIT=${INIT}
+  analytics_karafka:
+    build: ./analytics/lib/karafka
+    env_file:
+      - .env
+    depends_on:
+      - db
+    environment:
+      - KAFKA_USER=${KAFKA_USER}
+      - KAFKA_PASSWORD=${KAFKA_PASSWORD}

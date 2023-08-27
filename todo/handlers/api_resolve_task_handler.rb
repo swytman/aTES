@@ -34,9 +34,14 @@ class ApiResolveTaskHandler < BaseHandler
   end
 
   def produce_task_resolved_event
+    task = fetch_task
     event = {
       event_name: 'TaskResolved',
-      data: {task_uuid: task[:uuid], resolver_uuid: user[:uuid]}
+      data: {
+        task_uuid: task[:uuid],
+        resolver_uuid: user[:uuid],
+        closed_at: task[:closed_at].strftime("%Y-%m-%dT%H:%M:%S%z")
+      }
     }
     result = SchemaRegistry.validate_event(event, 'ates.task_resolved', version: 1)
     raise 'SchemaValidationFailed' if result.failure?

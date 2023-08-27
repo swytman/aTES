@@ -27,7 +27,7 @@ module Handlers
       # result = SchemaRegistry.validate_event(event, 'ates.transaction_created', version: 1)
       # raise 'SchemaValidationFailed' if result.failure?
 
-      producer.produce_sync(payload: event.to_json, topic: 'transactions-stream')
+      producer.produce_sync(payload: event.to_json, topic: 'transactions-lifecycle')
     end
 
     def prepared_data
