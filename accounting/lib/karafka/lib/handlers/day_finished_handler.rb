@@ -27,22 +27,22 @@ module Handlers
       db[:users].each do |user|
         transaction_data, cleaning_uuids = TransactionRepo.new(prepared_data(user[:uuid])).payment_transaction
         produce_transaction_created_event(transaction_data) if transaction_data
-        produce_transaction_updated_events(cleaning_uuids)
+        produce_transaction_finished_events(cleaning_uuids)
       end
     end
 
-    def produce_transaction_updated_events(cleaning_uuids)
+    def produce_transaction_finished_events(cleaning_uuids)
       messages = []
       cleaning_uuids.each do |tr_uuid|
         event = {
-          event_name: 'TransactionUpdated',
+          event_name: 'TransactionFinished',
           data: {uuid: tr_uuid, finished_at: data['finished_at']}
         }
         # result = SchemaRegistry.validate_event(event, 'ates.transaction_updated', version: 1)
         # raise 'SchemaValidationFailed' if result.failure?
 
         messages << {
-          topic: 'transactions-stream',
+          topic: 'transactions-lifecycle',
           payload: event.to_json
         }
       end
@@ -58,7 +58,7 @@ module Handlers
       # result = SchemaRegistry.validate_event(event, 'ates.transaction_updated', version: 1)
       # raise 'SchemaValidationFailed' if result.failure?
 
-      producer.produce_sync(payload: event.to_json, topic: 'transactions-stream')
+      producer.produce_sync(payload: event.to_json, topic: 'transactions-lifecycle')
     end
 
     def db
